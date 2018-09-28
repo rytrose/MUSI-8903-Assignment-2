@@ -83,10 +83,47 @@ def evaluate(data_loader, model, criterion, cuda):
 	# Returns loss and accuracy
 	######################################################
     ######## WRITE YOUR CODE BELOW #######################
+	# Put model in evaluation mode
+	model.eval()
 
+	with torch.no_grad():
+		# Keep track of how the model dows
+		loss = 0
+		correct = 0
+		n_examples = 0
 
-    ######################################################
-    return loss, accuracy
+		for batch_i, batch in enumerate(data_loader):
+			data, target = batch
+			if cuda:
+				data, target = data.cuda(), target.cuda()
+
+			# Create variables
+			data, target = Variable(data), Variable(target)
+
+			# Make prediction
+			output = model(data)
+
+			# Add loss
+			loss += criterion(output, target).data[0]
+
+			# Get argmax of probabilities
+			pred = output.data.max(1, keepdim=True)[1]
+
+			# Add number of correct predictions
+			correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+
+			# Add total number of predictions made
+			n_examples += pred.size(0)
+
+		# Average loss
+		loss /= n_examples
+
+		# Accuracy percentage
+		accuracy = (100.0 * correct) / n_examples
+
+	return loss, accuracy
+	######################################################
+
 
 
 def save(model, path):
@@ -96,7 +133,7 @@ def save(model, path):
 	# path:		path for model to be saved
 	######################################################
     ######## WRITE YOUR CODE BELOW #######################
-
+	torch.save(model, "models/" + path + '.pth')
 
 def load(path):
 	######################################################
@@ -106,7 +143,5 @@ def load(path):
 	# Returns model state_dict
 	######################################################
     ######## WRITE YOUR CODE BELOW #######################
-
-
-    ######################################################
-    return state_dict
+	state_dict = torch.load("models/" + path + '.pth')
+	return state_dict

@@ -6,7 +6,8 @@ import torch
 from torch.autograd import Variable
 import torch.utils.data
 import torch.nn as nn
-from utils import prepare_datasets, evaluate
+import torch.optim as optim
+from utils import prepare_datasets, evaluate, save
 from models import ConvNet, MyModel
 # Training settings
 parser = argparse.ArgumentParser(description='HW 2: Music/Speech CNN')
@@ -62,8 +63,9 @@ if args.cuda:
 
 ######## Define loss function and optimizer ##########
 ############## Write your code here ##################
-
-
+params = model.parameters()
+optimizer = optim.Adam(params, lr=args.lr, weight_decay=args.weight_decay)
+criterion = nn.CrossEntropyLoss()
 ######################################################
 
 
@@ -76,17 +78,36 @@ def train(epoch):
     model.train()
     for i, batch in enumerate(train_loader):
         ############ Write your code here ############
+        # Get input and labels
+        spectograms, targets = Variable(batch[0]), Variable(batch[1])
 
+        # Zero out gradients
+        optimizer.zero_grad()
 
-    mean_training_loss = mean_training_loss/len(train_loader)
-    print('Training Epoch: [{}][{}/{}]\t'
+        # Do forward pass
+        output = model(spectograms)
+
+        # Calculate loss
+        loss = criterion(output, targets)
+        # Add to mean
+        mean_training_loss += loss
+
+        # Backprop
+        loss.backward()
+
+        # Optimize
+        optimizer.step()
+
+    mean_training_loss = mean_training_loss / len(train_loader)
+    print('Training Epoch: [{}]\t'
             'Training Loss: {:.6f}'.format(
-            (epoch), (i), len(train_loader) - 1, mean_training_loss))
+            (epoch), mean_training_loss))
     ##################################################
 
 ######## Training and evaluation loop ################
 ######## Save model with best val accuracy  ##########
-
+most_acc_model = None
+highest_val_acc = -1
 for i in range(args.epochs):
     train(i)
     val_loss, val_acc = evaluate(val_loader, model, criterion, args.cuda)
@@ -94,8 +115,11 @@ for i in range(args.epochs):
             'Validation Acc.: {:.6f}'.format(
             val_loss, val_acc))
     ####### write saving code here ###################
+    if val_acc > highest_val_acc:
+        highest_val_acc = val_acc
+        most_acc_model = model
 
-
+save(model, args.model)
 
 ############ write testing code here #################
 def test(model):

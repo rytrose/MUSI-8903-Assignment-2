@@ -16,7 +16,27 @@ class ConvNet(nn.Module):
         #   Max Pool #3: pooling size=4, s=4
         #   FC #1: 64 hidden units                                                             
         ############################################################################# 
-        pass
+        self.layer_1 = nn.Sequential(
+            nn.Conv2d(1, 8, 3, padding=1, stride=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+
+        self.layer_2 = nn.Sequential(
+            nn.Conv2d(8, 16, 3, padding=1, stride=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=4, stride=4)
+        )
+
+        self.layer_3 = nn.Sequential(
+            nn.Conv2d(16, 32, 3, padding=1, stride=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=4, stride=4)
+        )
+
+        self.fc = nn.Linear(512, 64)
+        self.classifier = nn.Linear(64, 2)
+
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
@@ -24,8 +44,15 @@ class ConvNet(nn.Module):
     def forward(self, x):
         #############################################################################
         # TODO: Implement the forward pass for the model
-        ############################################################################# 
-        return None
+        #############################################################################
+        out = self.layer_1(torch.unsqueeze(x, 1))
+        out = self.layer_2(out)
+        out = self.layer_3(out)
+        out = out.reshape(out.size(0), -1)
+        out = self.fc(out)
+        out = self.classifier(out)
+
+        return out
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
