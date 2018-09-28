@@ -7,7 +7,7 @@ from torch.autograd import Variable
 import torch.utils.data
 import torch.nn as nn
 import torch.optim as optim
-from utils import prepare_datasets, evaluate, save
+from utils import prepare_datasets, evaluate, save, load
 from models import ConvNet, MyModel
 # Training settings
 parser = argparse.ArgumentParser(description='HW 2: Music/Speech CNN')
@@ -123,7 +123,7 @@ save(model, args.model)
 
 ############ write testing code here #################
 def test(model):
-
+    test_loss, test_acc = evaluate(val_loader, model, criterion, args.cuda)
     print('Test Loss: {:.6f} \t'
             'Test Acc.: {:.6f}'.format(
             test_loss, test_acc))
@@ -131,3 +131,5 @@ def test(model):
 
 ############# Load best model and test ###############
 ############## Write your code here ##################
+model = load(args.model)
+test(model)
