@@ -63,8 +63,32 @@ class MyModel(nn.Module):
         super(MyModel, self).__init__()
         #############################################################################
         # TODO: Implement your own model based on the hyperparameters of your choice
-        ############################################################################# 
-        pass
+        #############################################################################
+        self.layer_1 = nn.Sequential(
+            nn.Conv2d(1, 8, 3, padding=1, stride=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+
+        self.layer_2 = nn.Sequential(
+            nn.Conv2d(8, 16, 3, padding=1, stride=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=4, stride=4)
+        )
+
+        self.layer_3 = nn.Sequential(
+            nn.Conv2d(16, 32, 3, padding=1, stride=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=4, stride=4)
+        )
+
+        self.fcn = nn.Conv3d(1, 256, (32, 4, 4), padding=0, stride=1)
+        self.linear = nn.Sequential(
+            nn.Linear(256, 127),
+            nn.ReLU(),
+            nn.Linear(127, 2)
+        )
+
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
@@ -73,7 +97,14 @@ class MyModel(nn.Module):
         #############################################################################
         # TODO: Implement the forward pass for your model
         ############################################################################# 
-        return None
+        out = self.layer_1(torch.unsqueeze(x, 1))
+        out = self.layer_2(out)
+        out = self.layer_3(out)
+        out = self.fcn(torch.unsqueeze(out, 1))
+        out = torch.squeeze(out)
+        out = self.linear(out)
+
+        return out
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
